@@ -105,7 +105,7 @@ class RawRunner
 
   def get_db_connection
     $mongo ||= Mongo::Client.new(
-      'mongodb://127.0.0.1:27017/locker-raw-test',
+      'mongodb://127.0.0.1:27741/locker-raw-test',
       connect_timeout: 300,
       wait_queue_timeout: 300,
       max_pool_size: 1000,
