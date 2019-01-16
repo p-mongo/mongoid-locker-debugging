@@ -18,7 +18,7 @@ class Raw
   end
 
   def create_transaction(wallet_id, amount)
-    STDERR.puts ["before transaction", db[:wallets].find(_id: wallet_id).first].to_s.yellow
+    #STDERR.puts ["before transaction", db[:wallets].find(_id: wallet_id).first].to_s.yellow
     add_transaction(wallet_id, amount)
     increment_counter(wallet_id)
   end
@@ -31,22 +31,23 @@ class Raw
     wallet_id = BSON::ObjectId(wallet_id)
     data = db[:wallets].find(_id: wallet_id).first
     balance = data[:balance]
-    STDERR.puts ["creating transaction", db[:wallets].find(_id: wallet_id).first].to_s.yellow
+    STDERR.puts ["balance", balance].to_s.yellow
+    #STDERR.puts ["creating transaction", db[:wallets].find(_id: wallet_id).first].to_s.yellow
     db[:transactions].insert_one(wallet_id: wallet_id, amount: amount)
     db[:wallets].update_one({_id: wallet_id}, { '$set' => { balance: balance + amount } })
 
     STDERR.puts ["END", $lock_counter].to_s.blue
   ensure
     release_lock(wallet_id)
-    STDERR.puts ["lock released", db[:wallets].find(_id: wallet_id).first].to_s.yellow
+    #STDERR.puts ["lock released", db[:wallets].find(_id: wallet_id).first].to_s.yellow
   end
 
   def increment_counter(wallet_id)
     data = db[:wallets].find(_id: wallet_id).first
-    STDERR.puts ["before incrementing", db[:wallets].find(_id: wallet_id).first].to_s.yellow
+    #STDERR.puts ["before incrementing", db[:wallets].find(_id: wallet_id).first].to_s.yellow
     res = db[:wallets].update_one({_id: wallet_id}, {"$inc" => {counter: 1}})
     fail "Increment counter failed" unless res.ok?
-    STDERR.puts ["incremented", db[:wallets].find(_id: wallet_id).first].to_s.yellow
+    #STDERR.puts ["incremented", db[:wallets].find(_id: wallet_id).first].to_s.yellow
   end
 
   def acquire_lock(id)
