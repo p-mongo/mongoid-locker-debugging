@@ -51,6 +51,7 @@ class Raw
   end
 
   def acquire_lock(id)
+    wallets = db[:wallets].with(read_concern: {level: 'linearizable'})
     time = db.command({ serverStatus: 1 }).to_a.first["localTime"] # Time.now
     expiration = time + 5
     retry_limit = 500
@@ -58,7 +59,7 @@ class Raw
     sleep_time = 0.5
     loop do
 
-      locking_result = db[:wallets].update_one(
+      locking_result = wallets.update_one(
         {
           :_id => id,
           '$or' => [
@@ -71,9 +72,15 @@ class Raw
 
         '$set' => {
           locked_at:    time,
-          locked_until: expiration
+          locked_until: expiration,
+          locked_by: Process.pid,
         }
       )
+      if locking_result.documents.first['n'] > 0
+        puts "got #{locking_result.documents.first['n']}, #{id}, I am #{Process.pid}"
+        data = wallets.find(_id: id).first
+        puts "data #{data.inspect}, I am #{Process.pid}"
+      end
       acquired_lock = locking_result.ok? && locking_result.documents.first['n'] == 1
       retry_count += 1
       break if acquired_lock
