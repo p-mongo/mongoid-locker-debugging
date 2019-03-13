@@ -1,3 +1,4 @@
+require 'byebug'
 require 'mongo'
 require 'securerandom'
 require 'pry'
@@ -47,7 +48,8 @@ module Runners
 
       def acquire_lock(id)
         time = db.command({ serverStatus: 1 }).to_a.first["localTime"] # Time.now
-        expiration = time + 5
+        local_expiration = Time.now+50
+        expiration = time + 50
         retry_limit = 500
         retry_count = 0
         sleep_time = 0.5
@@ -72,6 +74,7 @@ module Runners
           acquired_lock = locking_result.ok? && locking_result.documents.first['n'] == 1
           retry_count += 1
           break if acquired_lock
+          @expires_at = local_expiration
           fail "Update failed on acquiring lock" unless locking_result.ok?
           fail "Cannot acquire lock" if retry_count == retry_limit
 
@@ -80,6 +83,9 @@ module Runners
       end
 
       def release_lock(id)
+      if @expires_at.nil?
+        puts "uh oh"
+      end
         unlocking_result = db[:wallets].update_one(
           { _id: id },
           '$set' => {
