@@ -4,6 +4,8 @@ require 'pry'
 require 'awesome_print'
 ::Mongo::Monitoring::CommandLogSubscriber::LOG_STRING_LIMIT = 2_000
 
+Mongo::Logger.logger.level = Logger::INFO
+
 module Runners
   module Raw
     class Wallet
@@ -99,7 +101,7 @@ module Runners
 
       def get_db_connection
         $mongo ||= Mongo::Client.new(
-          'mongodb://127.0.0.1:27017/locker-raw-test',
+          'mongodb://127.0.0.1:27741/locker-raw-test',
           connect_timeout: 300,
           wait_queue_timeout: 300,
           max_pool_size: 1000,

@@ -3,7 +3,7 @@ development:
     default:
       database: locker-test
       hosts:
-        - localhost:27017
+        - localhost:27741
       options:
         max_pool_size: 1000
         truncate_logs: false
